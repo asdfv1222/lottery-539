@@ -1,0 +1,12 @@
+{
+  "name": "lottery-539-system",
+  "version": "1.0.0",
+  "description": "今彩539全自動追蹤系統",
+  "scripts": {
+    "fetch": "node scripts/fetch-lottery.js"
+  },
+  "dependencies": {
+    "cheerio": "^1.0.0",
+    "iconv-lite": "^0.6.3"
+  }
+}

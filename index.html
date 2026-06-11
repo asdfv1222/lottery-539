@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>今彩539 養號追蹤系統</title>
+<style>
+  /* ── Design tokens ─────────────────────────────────── */
+  :root {
+    --bg:       #0d1117;
+    --surface:  #161b22;
+    --border:   #21262d;
+    --text:     #e6edf3;
+    --muted:    #8b949e;
+    --accent:   #f0c040;   /* 彩券金 */
+    --green:    #3fb950;
+    --red:      #f85149;
+    --blue:     #58a6ff;
+    --purple:   #bc8cff;
+
+    --r:        12px;
+    --gap:      16px;
+    font-size: 15px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, 'Microsoft JhengHei', 'PingFang TC', sans-serif;
+    line-height: 1.6;
+    padding-bottom: 40px;
+  }
+
+  /* ── Header ────────────────────────────────────────── */
+  header {
+    background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 20px var(--gap);
+    position: sticky; top: 0; z-index: 10;
+    display: flex; align-items: center; gap: 12px;
+  }
+  header .logo {
+    font-size: 28px; line-height: 1;
+  }
+  header h1 {
+    font-size: 16px; font-weight: 600; color: var(--text);
+    letter-spacing: .03em;
+  }
+  header .sub {
+    font-size: 12px; color: var(--muted);
+  }
+  #last-update {
+    margin-left: auto;
+    font-size: 11px; color: var(--muted);
+    text-align: right;
+  }
+
+  /* ── Layout ────────────────────────────────────────── */
+  main { max-width: 860px; margin: 0 auto; padding: var(--gap); }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--gap);
+  }
+  @media (max-width: 540px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  /* ── Cards ─────────────────────────────────────────── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--r);
+    padding: 20px;
+    margin-bottom: var(--gap);
+  }
+  .card-title {
+    font-size: 11px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--muted); margin-bottom: 14px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .card-title::before {
+    content: ''; display: block;
+    width: 3px; height: 14px;
+    border-radius: 2px;
+    background: var(--accent);
+  }
+
+  /* ── 養號球 ─────────────────────────────────────────── */
+  .numbers-row {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin: 6px 0 18px;
+  }
+  .ball {
+    width: 52px; height: 52px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; font-weight: 800;
+    background: radial-gradient(circle at 35% 35%, #ffe07a, #c8920a);
+    color: #1a0e00;
+    box-shadow: 0 4px 12px rgba(240,192,64,.35), inset 0 1px 1px rgba(255,255,255,.4);
+    position: relative;
+  }
+  .ball::after {
+    content: ''; position: absolute;
+    top: 8px; left: 12px;
+    width: 12px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.45);
+    transform: rotate(-20deg);
+  }
+  .ball.matched {
+    background: radial-gradient(circle at 35% 35%, #6ef08c, #1a7a30);
+    color: #fff;
+    box-shadow: 0 4px 16px rgba(63,185,80,.5), inset 0 1px 1px rgba(255,255,255,.4);
+  }
+
+  /* ── 今日狀態 ───────────────────────────────────────── */
+  .status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 99px;
+    font-size: 13px; font-weight: 600;
+  }
+  .badge-yes { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid rgba(63,185,80,.3); }
+  .badge-no  { background: rgba(139,148,158,.12); color: var(--muted); border: 1px solid var(--border); }
+  .badge-win { background: rgba(240,192,64,.15); color: var(--accent); border: 1px solid rgba(240,192,64,.3); }
+  .badge-lose{ background: rgba(248,81,73,.12); color: var(--red); border: 1px solid rgba(248,81,73,.25); }
+
+  .result-note {
+    margin-top: 10px; font-size: 13px; color: var(--muted);
+    padding: 10px; background: rgba(255,255,255,.03);
+    border-radius: 6px; border-left: 2px solid var(--border);
+  }
+
+  /* ── 帳務 ───────────────────────────────────────────── */
+  .finance-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .fin-item {
+    background: rgba(255,255,255,.03);
+    border: 1px solid var(--border);
+    border-radius: 8px; padding: 12px;
+  }
+  .fin-label {
+    font-size: 11px; color: var(--muted);
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: .06em;
+  }
+  .fin-value {
+    font-size: 22px; font-weight: 800; letter-spacing: -.01em;
+  }
+  .fin-value.principal { color: var(--blue); }
+  .fin-value.spent    { color: var(--red); }
+  .fin-value.remain   { color: var(--green); }
+  .fin-value.pnl      { color: var(--red); }
+  .fin-value.pnl.positive { color: var(--green); }
+
+  /* 進度條 */
+  .budget-bar-wrap {
+    margin-top: 14px;
+  }
+  .bar-label {
+    font-size: 11px; color: var(--muted);
+    display: flex; justify-content: space-between;
+    margin-bottom: 5px;
+  }
+  .bar-track {
+    height: 8px; border-radius: 99px;
+    background: var(--border); overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%; border-radius: 99px;
+    background: linear-gradient(90deg, var(--accent), var(--red));
+    transition: width .6s ease;
+  }
+
+  /* ── 開獎紀錄 ───────────────────────────────────────── */
+  .table-wrap {
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    border-radius: 8px; border: 1px solid var(--border);
+  }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 13px; min-width: 400px;
+  }
+  th {
+    background: rgba(255,255,255,.04);
+    padding: 10px 12px;
+    text-align: left; font-size: 11px;
+    font-weight: 700; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted);
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(33,38,45,.8);
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,.02); }
+  .num-chip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 26px; height: 26px; border-radius: 50%;
+    font-size: 12px; font-weight: 700;
+    background: rgba(240,192,64,.12);
+    color: var(--accent);
+    border: 1px solid rgba(240,192,64,.25);
+    margin: 1px;
+  }
+  .num-chip.hit {
+    background: rgba(63,185,80,.18);
+    color: var(--green);
+    border-color: rgba(63,185,80,.35);
+  }
+  .tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 99px;
+    font-weight: 600;
+  }
+  .tag-win { background: rgba(63,185,80,.15); color: var(--green); }
+  .tag-loss{ background: rgba(139,148,158,.1);  color: var(--muted); }
+  .tag-nobet{ background: transparent; color: var(--border); }
+
+  /* ── 策略歷史 ───────────────────────────────────────── */
+  .strategy-table th:first-child,
+  .strategy-table td:first-child { min-width: 120px; }
+  .strategy-name {
+    font-weight: 700; color: var(--text);
+  }
+  .period-label {
+    font-size: 11px; color: var(--muted);
+    display: block; margin-top: 2px;
+  }
+  .fail-tag {
+    font-size: 11px; background: rgba(248,81,73,.1);
+    color: var(--red); border: 1px solid rgba(248,81,73,.2);
+    border-radius: 4px; padding: 1px 6px; white-space: nowrap;
+  }
+  .fix-tag {
+    font-size: 11px; background: rgba(88,166,255,.1);
+    color: var(--blue); border: 1px solid rgba(88,166,255,.2);
+    border-radius: 4px; padding: 1px 6px;
+  }
+  .current-tag {
+    font-size: 11px; background: rgba(240,192,64,.12);
+    color: var(--accent); border: 1px solid rgba(240,192,64,.3);
+    border-radius: 4px; padding: 1px 6px;
+  }
+
+  /* ── 摘要行 ─────────────────────────────────────────── */
+  .summary-row {
+    display: flex; align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .today-date {
+    font-size: 14px; font-weight: 700; color: var(--text);
+  }
+  .today-date span { color: var(--muted); font-weight: 400; font-size: 12px; }
+
+  /* ── Loading / Error ───────────────────────────────── */
+  .loading {
+    text-align: center; padding: 40px;
+    color: var(--muted); font-size: 14px;
+  }
+  .loading::before {
+    content: '⏳ '; font-size: 20px;
+  }
+  .error-msg {
+    background: rgba(248,81,73,.08);
+    border: 1px solid rgba(248,81,73,.25);
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; color: var(--red);
+  }
+
+  /* ── Section spacing ─────────────────────────────── */
+  section { margin-bottom: var(--gap); }
+
+  .divider {
+    height: 1px; background: var(--border);
+    margin: 20px 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🎱</div>
+  <div>
+    <h1>今彩539 養號追蹤系統</h1>
+    <div class="sub">固定選號 · 長期持守 · 機率累積</div>
+  </div>
+  <div id="last-update">資料載入中…</div>
+</header>
+
+<main>
+
+  <!-- ① 今日養號 + 狀態 -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">今日養號</div>
+      <div class="numbers-row" id="today-balls">
+        <div class="ball">17</div>
+        <div class="ball">18</div>
+        <div class="ball">25</div>
+        <div class="ball">36</div>
+      </div>
+      <div class="summary-row">
+        <div class="today-date" id="today-date">
+          — <span>策略啟動：2026/05/30</span>
+        </div>
+      </div>
+      <div id="today-status"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">最新開獎</div>
+      <div id="latest-draw" class="loading">載入中</div>
+    </div>
+  </div>
+
+  <!-- ② 帳務 -->
+  <div class="card">
+    <div class="card-title">帳務總覽</div>
+    <div class="finance-grid" id="finance-grid">
+      <div class="fin-item">
+        <div class="fin-label">起始本金</div>
+        <div class="fin-value principal" id="fin-principal">—</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">累計花費</div>
+        <div class="fin-value spent" id="fin-spent">—</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">剩餘預算</div>
+        <div class="fin-value remain" id="fin-remain">—</div>
+      </div>
+      <div class="fin-item">
+        <div class="fin-label">累計損益</div>
+        <div class="fin-value pnl" id="fin-pnl">—</div>
+      </div>
+    </div>
+    <div class="budget-bar-wrap">
+      <div class="bar-label">
+        <span>預算消耗</span>
+        <span id="bar-pct">—</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="bar-fill" style="width:0%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ③ 策略沿革（固定內容） -->
+  <div class="card">
+    <div class="card-title">策略沿革</div>
+    <div class="table-wrap">
+      <table class="strategy-table">
+        <thead>
+          <tr>
+            <th>策略名稱</th>
+            <th>使用期間</th>
+            <th>失敗原因</th>
+            <th>改進方向</th>
+            <th>狀態</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              <span class="strategy-name">THERMO v1～v3</span>
+            </td>
+            <td><span style="color:var(--muted);font-size:13px;">4/15 ～ 5/15</span></td>
+            <td><span class="fail-tag">無統計效力</span><br><span style="font-size:12px;color:var(--muted);">換號頻繁</span></td>
+            <td><span class="fix-tag">刪除距今維度</span></td>
+            <td><span style="color:var(--muted);font-size:12px;">已結束</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="strategy-name">ENTROPY MODEL</span>
+            </td>
+            <td><span style="color:var(--muted);font-size:13px;">5/16 ～ 5/29</span></td>
+            <td><span class="fail-tag">25期換號7次</span><br><span style="font-size:12px;color:var(--muted);">成本不一致</span></td>
+            <td><span class="fix-tag">固定選號不換</span></td>
+            <td><span style="color:var(--muted);font-size:12px;">已結束</span></td>
+          </tr>
+          <tr>
+            <td>
+              <span class="strategy-name">兩組 3+4 星</span>
+            </td>
+            <td><span style="color:var(--muted);font-size:13px;">5/29（單期）</span></td>
+            <td><span class="fail-tag">成本1,000/期</span><br><span style="font-size:12px;color:var(--muted);">存活期太短</span></td>
+            <td><span class="fix-tag">降低成本</span></td>
+            <td><span style="color:var(--muted);font-size:12px;">已結束</span></td>
+          </tr>
+          <tr style="background:rgba(240,192,64,.04);">
+            <td>
+              <span class="strategy-name">養號策略</span><br>
+              <span style="color:var(--accent);font-size:12px;font-weight:700;">17 · 18 · 25 · 36</span>
+            </td>
+            <td><span style="color:var(--muted);font-size:13px;">5/30 ～ 持續中</span></td>
+            <td><span style="color:var(--muted);font-size:12px;">（進行中）</span></td>
+            <td><span style="font-size:12px;color:var(--muted);">固定號碼，買 3+4星<br>每期 500 元</span></td>
+            <td><span class="current-tag">▶ 現行</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- 策略說明 -->
+    <div style="font-size:13px;color:var(--muted);line-height:1.8;">
+      <strong style="color:var(--text);">最終決策原則：</strong>
+      固定選號 17、18、25、36，不再因模型訊號換號。
+      每期下注 <strong style="color:var(--accent);">500 元</strong>（3星+4星），
+      長期持守以累積中獎機率。
+      起始本金 30,000 元，配合嚴格帳務追蹤。
+    </div>
+  </div>
+
+  <!-- ④ 開獎紀錄 -->
+  <div class="card">
+    <div class="card-title">開獎紀錄 <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;">（最近50期）</span></div>
+    <div class="table-wrap">
+      <table id="history-table">
+        <thead>
+          <tr>
+            <th>期數</th>
+            <th>日期</th>
+            <th>開獎號碼</th>
+            <th>命中</th>
+            <th>下注</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr><td colspan="5" class="loading">載入中…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ══════════════════════════════════════════════════
+// ⚙️  設定區 — 請改成你的 GitHub 帳號與 repo 名稱
+// ══════════════════════════════════════════════════
+const GITHUB_USER = 'YOUR_GITHUB_USERNAME';   // ← 改這裡
+const GITHUB_REPO = 'lottery-539';            // ← 改這裡（repo 名稱）
+const BRANCH      = 'main';
+
+const RAW = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${BRANCH}`;
+const MY_NUMBERS = [17, 18, 25, 36];
+
+// ══════════════════════════════════════════════════
+// 工具函式
+// ══════════════════════════════════════════════════
+function fmt(n) {
+  return n.toLocaleString('zh-TW');
+}
+
+function parseCsv(text) {
+  const lines = text.trim().split('\n').filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const header = lines[0].split(',').map(s => s.trim());
+  return lines.slice(1).map(line => {
+    const vals = line.split(',').map(s => s.trim());
+    const obj = {};
+    header.forEach((k, i) => obj[k] = vals[i] || '');
+    return obj;
+  });
+}
+
+function today_tw() {
+  const d = new Date();
+  const tz = d.toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+  const m = tz.match(/(\d+)\/(\d+)\/(\d+)/);
+  if (!m) return '';
+  return `${m[1]}/${String(m[2]).padStart(2,'0')}/${String(m[3]).padStart(2,'0')}`;
+}
+
+async function fetchJson(url) {
+  const r = await fetch(url + '?t=' + Date.now());
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+async function fetchText(url) {
+  const r = await fetch(url + '?t=' + Date.now());
+  if (!r.ok) throw new Error(r.status);
+  return r.text();
+}
+
+// ══════════════════════════════════════════════════
+// 計算命中數
+// ══════════════════════════════════════════════════
+function hitCount(row) {
+  const drawn = [row['號碼1'], row['號碼2'], row['號碼3'], row['號碼4'], row['號碼5']]
+    .map(Number).filter(Boolean);
+  return MY_NUMBERS.filter(n => drawn.includes(n)).length;
+}
+
+// ══════════════════════════════════════════════════
+// 渲染：最新開獎
+// ══════════════════════════════════════════════════
+function renderLatest(rows) {
+  const el = document.getElementById('latest-draw');
+  if (!rows.length) { el.innerHTML = '<span style="color:var(--muted)">尚無資料</span>'; return; }
+
+  const last = rows[rows.length - 1];
+  const nums = [last['號碼1'], last['號碼2'], last['號碼3'], last['號碼4'], last['號碼5']];
+  const hit  = hitCount(last);
+
+  let html = `<div style="margin-bottom:10px;">`;
+  html += `<span style="font-size:12px;color:var(--muted);">${last['日期']}　第 ${last['期數']} 期</span>`;
+  html += `</div><div class="numbers-row">`;
+  for (const n of nums) {
+    const isHit = MY_NUMBERS.includes(+n);
+    html += `<div class="ball${isHit ? ' matched' : ''}">${(+n).toString()}</div>`;
+  }
+  html += `</div>`;
+  html += `<div style="margin-top:12px;font-size:13px;color:var(--muted);">`;
+  html += hit > 0
+    ? `<span style="color:var(--green);font-weight:700;">✓ 命中 ${hit} 個養號！</span>`
+    : `<span>與養號未有交集</span>`;
+  html += `</div>`;
+
+  el.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+// 渲染：今日下注狀態
+// ══════════════════════════════════════════════════
+function renderTodayStatus(manual) {
+  const todayStr = today_tw();
+  document.getElementById('today-date').innerHTML =
+    `${todayStr} <span>策略啟動：2026/05/30</span>`;
+
+  const betEntry = (manual.bets || []).find(b => b.date === todayStr);
+  const el = document.getElementById('today-status');
+
+  if (!betEntry) {
+    el.innerHTML = `<span class="status-badge badge-no">⭕ 今日尚未記錄</span>
+      <div class="result-note">請在 data/manual.json 新增今日下注記錄</div>`;
+    return;
+  }
+
+  const betBadge = betEntry.bet
+    ? `<span class="status-badge badge-yes">✅ 今日已下注 ${betEntry.cost ? fmt(betEntry.cost)+'元' : ''}</span>`
+    : `<span class="status-badge badge-no">— 今日未下注</span>`;
+
+  let resultBadge = '';
+  if (betEntry.result) {
+    const isWin = betEntry.result.includes('中獎');
+    resultBadge = isWin
+      ? `<span class="status-badge badge-win" style="margin-left:8px;">🎉 ${betEntry.result}</span>`
+      : `<span class="status-badge badge-lose" style="margin-left:8px;">✗ ${betEntry.result}</span>`;
+  }
+
+  el.innerHTML = `<div>${betBadge}${resultBadge}</div>`;
+  if (betEntry.note) {
+    el.innerHTML += `<div class="result-note">${betEntry.note}</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════
+// 渲染：帳務
+// ══════════════════════════════════════════════════
+function renderFinance(manual, bets) {
+  const cfg = manual.config || {};
+  const principal      = cfg.principal || 30000;
+  const spentBefore    = cfg.spent_before_now || 18800;
+  const betPerPeriod   = cfg.bet_per_period || 500;
+
+  // 加總 manual.bets 裡有記錄的花費
+  const extraSpent = (manual.bets || []).reduce((s, b) => s + (b.cost || 0), 0);
+  const totalSpent = spentBefore + extraSpent;
+  const remain     = principal - totalSpent;
+  const pnl        = -(totalSpent); // 假設無中獎紀錄（可擴充）
+
+  const pct = Math.min(100, Math.round(totalSpent / principal * 100));
+
+  document.getElementById('fin-principal').textContent = `$${fmt(principal)}`;
+  document.getElementById('fin-spent').textContent     = `$${fmt(totalSpent)}`;
+  document.getElementById('fin-remain').textContent    = `$${fmt(remain)}`;
+  const pnlEl = document.getElementById('fin-pnl');
+  pnlEl.textContent = `${pnl >= 0 ? '+' : ''}$${fmt(pnl)}`;
+  if (pnl >= 0) pnlEl.classList.add('positive');
+
+  document.getElementById('bar-pct').textContent = `${pct}%`;
+  document.getElementById('bar-fill').style.width = pct + '%';
+}
+
+// ══════════════════════════════════════════════════
+// 渲染：開獎紀錄表
+// ══════════════════════════════════════════════════
+function renderHistory(rows, manual) {
+  const tbody = document.getElementById('history-body');
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="5" style="color:var(--muted);text-align:center;padding:30px;">尚無開獎資料</td></tr>';
+    return;
+  }
+
+  const betsMap = {};
+  for (const b of (manual.bets || [])) betsMap[b.date] = b;
+
+  // 最近50期，由新到舊
+  const recent = rows.slice(-50).reverse();
+  let html = '';
+  for (const row of recent) {
+    const nums = [row['號碼1'], row['號碼2'], row['號碼3'], row['號碼4'], row['號碼5']];
+    const hit  = hitCount(row);
+    const bet  = betsMap[row['日期']];
+
+    let chips = '';
+    for (const n of nums) {
+      const isHit = MY_NUMBERS.includes(+n);
+      chips += `<span class="num-chip${isHit ? ' hit' : ''}">${(+n)}</span>`;
+    }
+
+    let hitCell = hit > 0
+      ? `<span style="color:var(--green);font-weight:700;">▲${hit}</span>`
+      : `<span style="color:var(--border);">—</span>`;
+
+    let betCell = '';
+    if (!bet) {
+      betCell = `<span class="tag tag-nobet">—</span>`;
+    } else if (!bet.bet) {
+      betCell = `<span class="tag" style="color:var(--muted);">未下注</span>`;
+    } else if (bet.result && bet.result.includes('中獎')) {
+      betCell = `<span class="tag tag-win">🎉 ${bet.result}</span>`;
+    } else {
+      betCell = `<span class="tag tag-loss">未中獎</span>`;
+    }
+
+    html += `<tr>
+      <td style="color:var(--muted);font-size:12px;">${row['期數']}</td>
+      <td style="font-size:12px;">${row['日期']}</td>
+      <td>${chips}</td>
+      <td>${hitCell}</td>
+      <td>${betCell}</td>
+    </tr>`;
+  }
+  tbody.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════════
+// 主程式
+// ══════════════════════════════════════════════════
+async function init() {
+  const updateEl = document.getElementById('last-update');
+
+  try {
+    const [csvText, manual] = await Promise.all([
+      fetchText(`${RAW}/data/lottery.csv`),
+      fetchJson(`${RAW}/data/manual.json`)
+    ]);
+
+    const rows = parseCsv(csvText);
+
+    renderLatest(rows);
+    renderTodayStatus(manual);
+    renderFinance(manual);
+    renderHistory(rows, manual);
+
+    const now = new Date().toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' });
+    updateEl.innerHTML = `最後載入<br>${now}`;
+
+  } catch (err) {
+    console.error(err);
+    updateEl.innerHTML = `載入失敗<br><span style="color:var(--red)">${err.message}</span>`;
+
+    // 友善的錯誤提示
+    document.getElementById('latest-draw').innerHTML =
+      `<div class="error-msg">⚠️ 無法載入資料。<br>
+      請確認 index.html 頂部的 GITHUB_USER 和 GITHUB_REPO 已正確填寫，
+      且 GitHub Pages 已啟用。</div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
