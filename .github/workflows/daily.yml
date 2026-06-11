@@ -19,23 +19,22 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
 
       - name: Install dependencies
         run: npm install
 
-      - name: 執行爬蟲：抓取今日開獎號碼
+      - name: 執行爬蟲
         run: node scripts/fetch-lottery.js
 
-      - name: Commit & Push 更新資料
+      - name: Commit & Push
         run: |
           git config --local user.email "539bot@github-actions"
           git config --local user.name "539 Auto Bot"
           git add data/
           if git diff --staged --quiet; then
-            echo "今日無新開獎資料，跳過 commit"
+            echo "無新資料"
           else
             TODAY=$(TZ='Asia/Taipei' date '+%Y/%m/%d')
-            git commit -m "🎱 自動更新：${TODAY} 開獎號碼"
+            git commit -m "自動更新：${TODAY}"
             git push
           fi
