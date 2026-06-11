@@ -283,6 +283,97 @@
     height: 1px; background: var(--border);
     margin: 20px 0;
   }
+
+  /* ── 下注表單 ─────────────────────────────────────── */
+  .form-row {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 10px; margin-bottom: 12px;
+  }
+  @media (max-width: 480px) { .form-row { grid-template-columns: 1fr; } }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-label {
+    font-size: 11px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .06em;
+  }
+  .form-input, .form-select {
+    background: rgba(255,255,255,.05);
+    border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px 12px;
+    color: var(--text); font-size: 14px;
+    outline: none; width: 100%;
+  }
+  .form-input:focus, .form-select:focus {
+    border-color: var(--accent);
+  }
+  .form-select option { background: #1c2128; }
+  .bet-toggle {
+    display: flex; gap: 8px;
+  }
+  .bet-btn {
+    flex: 1; padding: 8px; border-radius: 6px;
+    border: 1px solid var(--border);
+    background: transparent; color: var(--muted);
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    transition: all .15s;
+  }
+  .bet-btn.active-yes {
+    background: rgba(63,185,80,.15); color: var(--green);
+    border-color: rgba(63,185,80,.4);
+  }
+  .bet-btn.active-no {
+    background: rgba(139,148,158,.12); color: var(--muted);
+    border-color: var(--border);
+  }
+  .submit-btn {
+    width: 100%; padding: 12px;
+    background: var(--accent); color: #1a0e00;
+    border: none; border-radius: 8px;
+    font-size: 14px; font-weight: 800;
+    cursor: pointer; margin-top: 4px;
+    transition: opacity .15s;
+  }
+  .submit-btn:hover { opacity: .85; }
+  .submit-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .form-msg {
+    margin-top: 10px; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; display: none;
+  }
+  .form-msg.success {
+    background: rgba(63,185,80,.12);
+    border: 1px solid rgba(63,185,80,.3);
+    color: var(--green); display: block;
+  }
+  .form-msg.error {
+    background: rgba(248,81,73,.1);
+    border: 1px solid rgba(248,81,73,.25);
+    color: var(--red); display: block;
+  }
+  .token-section {
+    background: rgba(240,192,64,.06);
+    border: 1px solid rgba(240,192,64,.2);
+    border-radius: 8px; padding: 12px 14px;
+    margin-bottom: 14px;
+  }
+  .token-row {
+    display: flex; gap: 8px; align-items: center; margin-top: 6px;
+  }
+  .token-input {
+    flex: 1; background: rgba(255,255,255,.05);
+    border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 10px; color: var(--text); font-size: 13px;
+    font-family: monospace; outline: none;
+  }
+  .token-input:focus { border-color: var(--accent); }
+  .token-save-btn {
+    padding: 7px 14px; background: rgba(240,192,64,.15);
+    border: 1px solid rgba(240,192,64,.3);
+    border-radius: 6px; color: var(--accent);
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    white-space: nowrap;
+  }
+  .token-saved {
+    font-size: 11px; color: var(--green); margin-top: 4px;
+  }
 </style>
 </head>
 <body>
@@ -422,6 +513,57 @@
     </div>
   </div>
 
+
+  <!-- ③ 今日下注記錄表單 -->
+  <div class="card">
+    <div class="card-title">記錄今日下注</div>
+    <div class="token-section" id="token-section">
+      <div style="font-size:12px;color:var(--accent);font-weight:700;">🔑 第一次使用：設定 GitHub Token</div>
+      <div style="font-size:11px;color:var(--muted);margin-top:3px;">到 github.com/settings/tokens/new 建立，勾選 repo，貼在下方（只需設定一次）</div>
+      <div class="token-row">
+        <input class="token-input" id="token-input" type="password" placeholder="ghp_xxxxxxxxxxxx">
+        <button class="token-save-btn" onclick="saveToken()">儲存</button>
+      </div>
+      <div class="token-saved" id="token-saved" style="display:none">✓ Token 已儲存在瀏覽器</div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <span class="form-label">日期</span>
+        <input class="form-input" id="f-date" type="text" readonly>
+      </div>
+      <div class="form-group">
+        <span class="form-label">是否下注</span>
+        <div class="bet-toggle">
+          <button class="bet-btn active-yes" id="btn-yes" onclick="setBet(true)">✅ 有下注</button>
+          <button class="bet-btn" id="btn-no" onclick="setBet(false)">— 未下注</button>
+        </div>
+      </div>
+    </div>
+    <div class="form-row" id="bet-details">
+      <div class="form-group">
+        <span class="form-label">金額（元）</span>
+        <input class="form-input" id="f-cost" type="number" value="500">
+      </div>
+      <div class="form-group">
+        <span class="form-label">對獎結果</span>
+        <select class="form-select" id="f-result">
+          <option value="未中獎">未中獎</option>
+          <option value="中獎第5獎">中獎第5獎（50元）</option>
+          <option value="中獎第4獎">中獎第4獎（300元）</option>
+          <option value="中獎第3獎">中獎第3獎（1,500元）</option>
+          <option value="中獎第2獎">中獎第2獎（4,000元）</option>
+          <option value="中獎頭獎">中獎頭獎（8,000,000元）🎉</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="margin-bottom:12px;">
+      <span class="form-label">備註（選填）</span>
+      <input class="form-input" id="f-note" type="text" placeholder="例：今天剛好路過買">
+    </div>
+    <button class="submit-btn" id="submit-btn" onclick="submitRecord()">📝 儲存今日記錄</button>
+    <div class="form-msg" id="form-msg"></div>
+  </div>
+
   <!-- ④ 開獎紀錄 -->
   <div class="card">
     <div class="card-title">開獎紀錄 <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;">（最近50期）</span></div>
@@ -449,7 +591,7 @@
 // ══════════════════════════════════════════════════
 // ⚙️  設定區 — 請改成你的 GitHub 帳號與 repo 名稱
 // ══════════════════════════════════════════════════
-const GITHUB_USER = 'asdfv1222';   // ← 改這裡
+const GITHUB_USER = 'YOUR_GITHUB_USERNAME';   // ← 改這裡
 const GITHUB_REPO = 'lottery-539';            // ← 改這裡（repo 名稱）
 const BRANCH      = 'main';
 
@@ -681,7 +823,118 @@ async function init() {
   }
 }
 
+
+// ══════════════════════════════════════════════════
+// 下注記錄表單
+// ══════════════════════════════════════════════════
+let isBet = true;
+
+function initForm() {
+  document.getElementById('f-date').value = today_tw();
+  const saved = localStorage.getItem('gh_token_539');
+  if (saved) {
+    document.getElementById('token-input').value = saved;
+    document.getElementById('token-saved').style.display = 'block';
+  }
+}
+
+function saveToken() {
+  const t = document.getElementById('token-input').value.trim();
+  if (!t.startsWith('ghp_') && !t.startsWith('github_pat_')) {
+    alert('Token 格式不對，應該以 ghp_ 開頭');
+    return;
+  }
+  localStorage.setItem('gh_token_539', t);
+  document.getElementById('token-saved').style.display = 'block';
+  document.getElementById('token-saved').textContent = '✓ Token 已儲存';
+}
+
+function setBet(val) {
+  isBet = val;
+  document.getElementById('btn-yes').className = 'bet-btn' + (val ? ' active-yes' : '');
+  document.getElementById('btn-no').className  = 'bet-btn' + (!val ? ' active-no' : '');
+  document.getElementById('bet-details').style.display = val ? '' : 'none';
+}
+
+function showMsg(type, text) {
+  const el = document.getElementById('form-msg');
+  el.className = 'form-msg ' + type;
+  el.textContent = text;
+}
+
+async function submitRecord() {
+  const token = localStorage.getItem('gh_token_539') ||
+                document.getElementById('token-input').value.trim();
+  if (!token) { showMsg('error', '請先輸入並儲存 GitHub Token'); return; }
+
+  const dateVal   = document.getElementById('f-date').value;
+  const costVal   = isBet ? parseInt(document.getElementById('f-cost').value) || 0 : 0;
+  const resultVal = isBet ? document.getElementById('f-result').value : '';
+  const noteVal   = document.getElementById('f-note').value.trim();
+
+  const newEntry = { date: dateVal, bet: isBet, cost: costVal, result: resultVal, note: noteVal };
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = '儲存中…';
+  showMsg('', '');
+
+  try {
+    // 1. 取得目前 manual.json 的內容和 SHA
+    const getRes = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data/manual.json`,
+      { headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' } }
+    );
+    if (!getRes.ok) throw new Error(`讀取失敗 (${getRes.status})，請確認 Token 正確且有 repo 權限`);
+    const getJson = await getRes.json();
+    const sha     = getJson.sha;
+    const current = JSON.parse(atob(getJson.content.replace(/
+/g,'')));
+
+    // 2. 檢查今天是否已有記錄
+    const exists = (current.bets || []).findIndex(b => b.date === dateVal);
+    if (exists >= 0) {
+      current.bets[exists] = newEntry;  // 更新
+    } else {
+      current.bets = [...(current.bets || []), newEntry];  // 新增
+    }
+
+    // 3. 寫回 GitHub
+    const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(current, null, 2))));
+    const putRes = await fetch(
+      `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/data/manual.json`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/vnd.github+json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          message: `記錄 ${dateVal} 下注`,
+          content: newContent,
+          sha: sha
+        })
+      }
+    );
+    if (!putRes.ok) {
+      const errJson = await putRes.json();
+      throw new Error(errJson.message || `寫入失敗 (${putRes.status})`);
+    }
+
+    showMsg('success', `✅ ${dateVal} 記錄已儲存！約1分鐘後重新整理頁面即可看到更新。`);
+    setTimeout(() => init(), 3000);
+
+  } catch(err) {
+    showMsg('error', '❌ ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '📝 儲存今日記錄';
+  }
+}
+
 init();
+initForm();
 </script>
 </body>
 </html>
