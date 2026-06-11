@@ -1,0 +1,41 @@
+name: 每日抓取539開獎號碼
+
+on:
+  schedule:
+    - cron: '30 13 * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-lottery:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: 執行爬蟲：抓取今日開獎號碼
+        run: node scripts/fetch-lottery.js
+
+      - name: Commit & Push 更新資料
+        run: |
+          git config --local user.email "539bot@github-actions"
+          git config --local user.name "539 Auto Bot"
+          git add data/
+          if git diff --staged --quiet; then
+            echo "今日無新開獎資料，跳過 commit"
+          else
+            TODAY=$(TZ='Asia/Taipei' date '+%Y/%m/%d')
+            git commit -m "🎱 自動更新：${TODAY} 開獎號碼"
+            git push
+          fi
