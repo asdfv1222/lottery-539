@@ -22,7 +22,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: 執行爬蟲：抓取今日開獎號碼
         run: node scripts/fetch-lottery.js
