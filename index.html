@@ -53,14 +53,24 @@ main{max-width:860px;margin:0 auto;padding:16px;}
 
 /* 表格 */
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;border:1px solid var(--border);}
-table{width:100%;border-collapse:collapse;font-size:13px;min-width:380px;}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:320px;}
 th{background:rgba(255,255,255,.04);padding:10px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-bottom:1px solid var(--border);}
 td{padding:10px 12px;border-bottom:1px solid rgba(33,38,45,.8);}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(255,255,255,.02);}
 .num-chip{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700;background:rgba(240,192,64,.12);color:var(--accent);border:1px solid rgba(240,192,64,.25);margin:1px;}
+@media(max-width:480px){
+  .col-period{display:none;}
+  th:first-child{display:none;}
+
+  .num-chip{width:22px;height:22px;font-size:10px;margin:1px;}
+  table{font-size:12px;}
+  th{padding:8px 6px;font-size:10px;}
+  td{padding:8px 6px;}
+  .tag{font-size:10px;padding:2px 5px;}
+}
 .num-chip.hit{background:rgba(63,185,80,.18);color:var(--green);border-color:rgba(63,185,80,.35);}
-.tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;}
+.tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;white-space:nowrap;}
 .tag-win{background:rgba(63,185,80,.15);color:var(--green);}
 .tag-loss{background:rgba(139,148,158,.1);color:var(--muted);}
 
