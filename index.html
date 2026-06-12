@@ -59,15 +59,14 @@ td{padding:10px 12px;border-bottom:1px solid rgba(33,38,45,.8);}
 tr:last-child td{border-bottom:none;}
 tr:hover td{background:rgba(255,255,255,.02);}
 .num-chip{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-size:12px;font-weight:700;background:rgba(240,192,64,.12);color:var(--accent);border:1px solid rgba(240,192,64,.25);margin:1px;}
-@media(max-width:480px){
-  .col-period{display:none;}
-  th:first-child{display:none;}
-
-  .num-chip{width:22px;height:22px;font-size:10px;margin:1px;}
+@media(max-width:540px){
+  #history-table .col-period{display:none;}
+  #history-table th:first-child{display:none;}
+  .num-chip{width:21px;height:21px;font-size:10px;margin:1px;}
   table{font-size:12px;}
-  th{padding:8px 6px;font-size:10px;}
-  td{padding:8px 6px;}
-  .tag{font-size:10px;padding:2px 5px;}
+  th{padding:8px 5px;font-size:10px;}
+  td{padding:8px 5px;}
+  .tag{font-size:11px;padding:2px 6px;}
 }
 .num-chip.hit{background:rgba(63,185,80,.18);color:var(--green);border-color:rgba(63,185,80,.35);}
 .tag{font-size:11px;padding:2px 8px;border-radius:99px;font-weight:600;white-space:nowrap;}
@@ -240,7 +239,7 @@ tr:hover td{background:rgba(255,255,255,.02);}
 <div class="card">
   <div class="card-title">開獎紀錄 <span style="font-weight:400;color:var(--muted);font-size:11px;margin-left:6px;" id="record-count"></span></div>
   <div class="table-wrap">
-    <table>
+    <table id="history-table">
       <thead><tr><th>期數</th><th>日期</th><th>開獎號碼</th><th>命中</th><th>下注</th></tr></thead>
       <tbody id="history-body"><tr><td colspan="5" class="empty-msg">⏳ 載入中…</td></tr></tbody>
     </table>
