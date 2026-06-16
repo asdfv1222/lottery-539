@@ -423,7 +423,7 @@ function renderHistory(rows, manual){
     let betCell='<span style="color:var(--border);font-size:11px;">—</span>';
     if(bet){
       if(!bet.bet) betCell=`<span class="tag" style="color:var(--muted);">未下注</span>`;
-      else if(bet.result&&bet.result!=='未中獎') betCell=`<span class="tag tag-win">🎉 ${bet.result}</span>`;
+      else if(bet.result && bet.result!=='' && !bet.result.includes('未中獎') && (bet.result.includes('中') || bet.result.includes('$'))) betCell=`<span class="tag tag-win">🎉 ${bet.result}</span>`;
       else betCell=`<span class="tag tag-loss">未中獎</span>`;
     }
     html+=`<tr><td style="color:var(--muted);font-size:12px;">${row['期數']}</td><td style="font-size:12px;">${row['日期']}</td><td>${chips}</td><td>${hitCell}</td><td>${betCell}</td></tr>`;
@@ -521,7 +521,12 @@ async function submitRecord(){
     if(!getRes.ok) throw new Error(`Token 錯誤或無權限 (${getRes.status})`);
     const getJson=await getRes.json();
     const sha=getJson.sha;
-    const current=JSON.parse(atob(getJson.content.replace(/\n/g,'')));
+    // 正確解碼 base64 → UTF-8（確保中文字不亂碼）
+    const _b64=getJson.content.replace(/\n/g,'');
+    const _bin=atob(_b64);
+    const _bytes=new Uint8Array(_bin.length);
+    for(let _i=0;_i<_bin.length;_i++) _bytes[_i]=_bin.charCodeAt(_i);
+    const current=JSON.parse(new TextDecoder('utf-8').decode(_bytes));
     const idx=(current.bets||[]).findIndex(b=>b.date===dateVal);
     if(idx>=0) current.bets[idx]=newEntry;
     else current.bets=[...(current.bets||[]),newEntry];
