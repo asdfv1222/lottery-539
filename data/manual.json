@@ -48,6 +48,13 @@
       "cost": 500,
       "result": "",
       "note": ""
+    },
+    {
+      "date": "2026/06/15",
+      "bet": true,
+      "cost": 500,
+      "result": "未中獎",
+      "note": ""
     }
   ]
 }
